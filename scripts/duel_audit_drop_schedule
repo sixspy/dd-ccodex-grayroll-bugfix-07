@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# duel_audit_drop_schedule — 并发双请求对打「导出白名单变更互斥」。
+# 用法:
+#   scripts/duel_audit_drop_schedule                # 打 http://127.0.0.1:8000（仅标准库）
+#   BASE_URL=http://127.0.0.1:8020 scripts/duel_audit_drop_schedule
+#   scripts/duel_audit_drop_schedule --inproc      # 不起服务，进程内自检（需 fastapi）
+set -euo pipefail
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -n "${PYTHON:-}" ]; then
+  PY="$PYTHON"
+elif [ -x "$DIR/../.venv/bin/python" ]; then
+  PY="$DIR/../.venv/bin/python"
+elif [ -x /tmp/gbf07venv/bin/python ]; then
+  PY=/tmp/gbf07venv/bin/python
+else
+  PY=python3
+fi
+exec "$PY" "$DIR/duel_audit_drop_schedule.py" "$@"

@@ -58,6 +58,40 @@ for r in (
 ):
     app.include_router(r)
 
+# gbf07：台账核对/复核闸门/白名单互斥口的跨服务路径别名。
+# 唯一实现仍在 audit_svc（同一本账、同一把锁），这里只让爬坡/历史/总览命名空间可达，
+# 不引入第二套口径，也不改变前端导航。
+import audit_svc as _audit_svc  # noqa: E402
+
+for _p in (
+    "/api/schedules/ledger",
+    "/api/schedules/consistency",
+    "/api/schedules/audit",
+    "/api/history/ledger",
+    "/api/history/consistency",
+    "/api/dashboard/ledger",
+    "/api/dashboard/audit",
+    "/api/dashboard/consistency",
+):
+    app.add_api_route(_p, _audit_svc.get_ledger, methods=["GET"])
+
+for _p in (
+    "/api/schedules/review",
+    "/api/dashboard/review",
+    "/api/dashboard/summary",
+    "/api/dashboard/summary/confirm",
+    "/api/history/review",
+):
+    app.add_api_route(_p, _audit_svc.post_review, methods=["POST"])
+
+for _p in (
+    "/api/schedules/export-whitelist",
+    "/api/schedules/whitelist",
+    "/api/dashboard/export-whitelist",
+):
+    app.add_api_route(_p, _audit_svc.change_whitelist, methods=["POST", "PUT"])
+    app.add_api_route(_p, _audit_svc.get_whitelist, methods=["GET"])
+
 
 @app.on_event("startup")
 def _startup() -> None:

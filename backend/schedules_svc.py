@@ -63,9 +63,10 @@ def create_schedule(body: ScheduleIn, authorization: str | None = Header(default
         )
         sid = cur.lastrowid
         write_audit(conn, user["username"], "schedule_create", "schedule", sid, steps[:120])
+        # 历史沿用 action='schedule'；与动作账 schedule_create 同笔同事务，历史口挂动作别名。
         write_history(conn, user["username"], "schedule", f"爬坡计划 {sid}", flag_id=fid, env_id=eid)
         conn.commit()
-    return {"id": sid, "status": "planned"}
+    return {"id": sid, "status": "planned", "audit_action": "schedule_create", "history_action": "schedule"}
 
 
 @router.post("/{schedule_id}/cancel")

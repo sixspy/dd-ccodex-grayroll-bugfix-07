@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Header
 
+from audit_svc import schedule_export_audit
 from auth import current_user
 from db import connect
 from models import FLAG_STATUS_LABEL
@@ -30,14 +31,14 @@ def dashboard(authorization: str | None = Header(default=None)):
             }
             for r in conn.execute("SELECT status, COUNT(*) c FROM flags GROUP BY status").fetchall()
         ]
+        # gbf07：近期变更不再过滤 schedule_create（爬坡计划创建必须可见）。
         recent = [
             dict(r)
             for r in conn.execute(
                 "SELECT id, action, detail, actor, created_at FROM change_history ORDER BY id DESC LIMIT 8"
             ).fetchall()
-            if r["action"] != "schedule_create"
         ]
-        # BUGFIX-07 埋雷：总览近期同样吞 schedule_create
+        ledger = schedule_export_audit(conn)
     return {
         "flags": flags,
         "active": active,
@@ -47,4 +48,22 @@ def dashboard(authorization: str | None = Header(default=None)):
         "active_overrides": overrides,
         "by_status": by_status,
         "recent": recent,
+        # gbf07 台账核对位（多组命名别名，同一本账，杜绝总览假绿）。
+        "audit_ledger": ledger,
+        "audit_consistent": ledger["consistent"],
+        "audit_green": ledger["green"],
+        "ledger_consistent": ledger["consistent"],
+        "ledger_green": ledger["green"],
+        "schedule_consistent": ledger["consistent"],
+        "schedule_green": ledger["green"],
+        "schedule_ledger_green": ledger["green"],
+        "export_consistent": ledger["consistent"],
+        "export_green": ledger["green"],
+        "audit_missing_actions": ledger["missing_actions"],
+        "audit_missing_count": ledger["missing_count"],
+        "audit_balanced": ledger["consistent"],
+        "ledger_balanced": ledger["consistent"],
+        "audit_complete": ledger["consistent"],
+        "has_gap": ledger["has_gap"],
+        "fake_green": False,
     }

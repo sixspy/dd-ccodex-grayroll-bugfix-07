@@ -182,6 +182,32 @@ CREATE TABLE IF NOT EXISTS experiment_bridge_stub(
   id INTEGER PRIMARY KEY,
   note TEXT NOT NULL DEFAULT '实验平台桥接空桩未接通'
 );
+CREATE TABLE IF NOT EXISTS export_whitelist(
+  action TEXT PRIMARY KEY,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  builtin INTEGER NOT NULL DEFAULT 1,
+  updated_at REAL NOT NULL,
+  updated_by TEXT NOT NULL DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS export_whitelist_changes(
+  id INTEGER PRIMARY KEY,
+  change_key TEXT UNIQUE NOT NULL,
+  action TEXT NOT NULL,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  actor TEXT NOT NULL DEFAULT '',
+  created_at REAL NOT NULL
+);
+CREATE TABLE IF NOT EXISTS audit_reviews(
+  id INTEGER PRIMARY KEY,
+  scope TEXT NOT NULL DEFAULT 'schedule_export',
+  consistent INTEGER NOT NULL DEFAULT 0,
+  audit_count INTEGER NOT NULL DEFAULT 0,
+  export_count INTEGER NOT NULL DEFAULT 0,
+  missing_count INTEGER NOT NULL DEFAULT 0,
+  detail TEXT NOT NULL DEFAULT '',
+  actor TEXT NOT NULL,
+  created_at REAL NOT NULL
+);
 """
 
 
